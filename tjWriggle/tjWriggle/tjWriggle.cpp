@@ -25,7 +25,7 @@ bool isGoalReached(map<char, WriggleWorm> allWorms) {
 }
 
 void breadthFirstTreeSearch(vector<vector<char>> &puzzleGrid, short numWriggle) {
-	time_t startTime = time(NULL);
+	clock_t startTime = clock();
 	PuzzleTree resultTree = PuzzleTree(puzzleGrid);
 	PuzzleNode* currentNode = resultTree.getRoot();
 	queue<PuzzleNode*> currentChildrenList;
@@ -57,12 +57,12 @@ void breadthFirstTreeSearch(vector<vector<char>> &puzzleGrid, short numWriggle) 
 		resultMoves.push_back(currentNode->parentMove);
 		currentNode = currentNode->parent;
 	}
-	time_t endTime = time(NULL);
+	clock_t endTime = clock();
 	for (vector<WormMove*>::reverse_iterator it = resultMoves.rbegin(); it != resultMoves.rend(); ++it) {
 		(*it)->print();
 	}
 	WriggleWorm::printPuzzle(lastNode->gameGrid);
-	cout << endTime - startTime << endl;
+	cout << (endTime - startTime) << endl;
 	cout << resultMoves.size();
 }
 
