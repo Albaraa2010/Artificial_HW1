@@ -28,7 +28,6 @@ struct PuzzleNode {
 		delete parent;
 		delete parentMove;
 	};
-
 };
 
 class PuzzleTree {
