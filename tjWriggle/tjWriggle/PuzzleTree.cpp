@@ -1,6 +1,5 @@
 #include "PuzzleTree.h"
 
-
 PuzzleTree::PuzzleTree() {
 }
 
@@ -8,7 +7,7 @@ PuzzleTree::PuzzleTree(const vector<vector<char>> &gameGrid) {
 	this->root = PuzzleNode(gameGrid, NULL, NULL);
 }
 
-PuzzleNode* getRoot() {
+PuzzleNode* PuzzleTree::getRoot() {
 	return &this->root;
 }
 

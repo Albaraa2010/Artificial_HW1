@@ -32,8 +32,6 @@ struct PuzzleNode {
 };
 
 class PuzzleTree {
-
-
 private:
 	PuzzleNode root;
 public:
