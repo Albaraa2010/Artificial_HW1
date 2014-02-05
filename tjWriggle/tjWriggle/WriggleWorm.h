@@ -27,7 +27,6 @@ struct WormMove {
 	char wormIndex;
 	bool isHead;
 
-
 	WormMove() {};
 
 	WormMove(int y, int x, char index, bool head) {
@@ -40,13 +39,11 @@ struct WormMove {
 	void print() const {
 		cout << wormIndex << " " << !isHead << " " << xCoord << " " << yCoord << endl;
 	}
-
 };
 
 class WriggleWorm {
 
 public:
-
 	WriggleWorm() {};
 	WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleIndex);
 	WriggleWorm(const WriggleWorm & oldWorm);
@@ -64,8 +61,6 @@ private:
 	short goalX, goalY;
 	char wormIndex;
 	vector<WormPiece> wormBody;
-
-
 };
 
 #endif

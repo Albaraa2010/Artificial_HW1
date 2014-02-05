@@ -67,7 +67,6 @@ void breadthFirstTreeSearch(vector<vector<char>> &puzzleGrid, short numWriggle) 
 }
 
 int main(int argc, char* argv[]) {
-
 	string puzzleName = argv[1];
 	ifstream puzzleFile;
 	short lineCount = 0;
