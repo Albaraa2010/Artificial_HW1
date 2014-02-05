@@ -27,7 +27,7 @@ bool isGoalReached(map<char, WriggleWorm> allWorms) {
 void breadthFirstTreeSearch(vector<vector<char>> &puzzleGrid, short numWriggle) {
 	time_t startTime = time(NULL);
 	PuzzleTree resultTree = PuzzleTree(puzzleGrid);
-	PuzzleNode* currentNode = &resultTree.root;
+	PuzzleNode* currentNode = resultTree.getRoot();
 	queue<PuzzleNode*> currentChildrenList;
 	map<char, WriggleWorm> allWorms;
 	vector<WormMove*> resultMoves;

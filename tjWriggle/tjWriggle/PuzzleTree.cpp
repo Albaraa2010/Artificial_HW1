@@ -8,6 +8,10 @@ PuzzleTree::PuzzleTree(const vector<vector<char>> &gameGrid) {
 	this->root = PuzzleNode(gameGrid, NULL, NULL);
 }
 
+PuzzleNode* getRoot() {
+	return &this->root;
+}
+
 PuzzleTree::~PuzzleTree() {
 }
 

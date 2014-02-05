@@ -35,16 +35,12 @@ class PuzzleTree {
 
 
 private:
-
+	PuzzleNode root;
 public:
 	PuzzleTree();
-
-	PuzzleNode root;
-
 	PuzzleTree(const vector<vector<char>> &gameGrid);
-
+	PuzzleNode* getRoot();
 	PuzzleNode* insert(PuzzleNode* parent, WormMove* parentMove, const vector<vector<char>> &gameGrid);
-
 	~PuzzleTree();
 };
 
