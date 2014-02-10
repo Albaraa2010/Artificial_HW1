@@ -1,6 +1,12 @@
 #include "WriggleWorm.h"
 
 
+unordered_map<string, char> WriggleWorm::directionMap = WriggleWorm::populateMap();
+unordered_map<string, char> WriggleWorm::headDirectionMap = WriggleWorm::populateHeadMap();
+//unordered_map<Key, char>::const_iterator gotBody;
+//unordered_map<Key, char>::const_iterator gotHead;
+
+//Creating wriggle worm to identify with as a wriggle worm within the puzzle.
 WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleIndex) {
 	wormIndex = wriggleIndex;
 	goalX = puzzleGrid[0].size() - 1;
@@ -12,9 +18,45 @@ WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleInd
 				char bodyPieceYCount = i - puzzleGrid.begin();
 				char bodyPieceXCount = j - i->begin();
 
+				//Initializes the tail as this is where the worm is starting
 				wormTail = WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece);
 
+				//While not reaching the head of the worm
 				while ('U' != currentBodyPiece && 'D' != currentBodyPiece && 'R' != currentBodyPiece && 'L' != currentBodyPiece) {
+					bool breaker = false;
+					for (int i = -1; i <= 1; i++) {
+						for (int j = -1; j <= 1; j++) {
+							if (!(i == j) && i == 0 || j == 0) {
+								if (bodyPieceXCount + j >= 0 && bodyPieceXCount + j < puzzleGrid[bodyPieceYCount].size() && 
+									bodyPieceYCount + i >= 0 && bodyPieceYCount + i < puzzleGrid.size()) {
+									//gotBody = directionMap.find({ to_string(j), to_string(i) });
+									//gotHead = headDirectionMap.find({ to_string(j), to_string(i) });
+									//char bodyGot = gotBody->second;
+									//char headGot = gotHead->second;
+									char bodyGot = directionMap[{ to_string(j), to_string(i) }];
+									char headGot = headDirectionMap[{ to_string(j), to_string(i) }];
+
+									if (puzzleGrid[bodyPieceYCount + i][bodyPieceXCount + j] == bodyGot) {
+										currentBodyPiece = puzzleGrid[bodyPieceYCount + i][bodyPieceXCount + j];
+										bodyPieceXCount = bodyPieceXCount + j;
+										bodyPieceYCount = bodyPieceYCount + i;
+										wormBody.push_back(WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece));
+										breaker = true;
+										break;
+									} else if (puzzleGrid[bodyPieceYCount + i][bodyPieceXCount + j] == headGot) {
+										currentBodyPiece = puzzleGrid[bodyPieceYCount + i][bodyPieceXCount + j];
+										bodyPieceXCount = bodyPieceXCount + j;
+										bodyPieceYCount = bodyPieceYCount + i;
+										wormHead = WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece);
+										breaker = true;
+										break;
+									}
+								}
+							}
+						}
+						if (breaker) { break; }
+					}
+					/*
 					if (bodyPieceXCount - 1 >= 0 && puzzleGrid[bodyPieceYCount][bodyPieceXCount - 1] == '>') {
 						currentBodyPiece = puzzleGrid[bodyPieceYCount][bodyPieceXCount - 1];
 						bodyPieceXCount = bodyPieceXCount - 1;
@@ -55,11 +97,13 @@ WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleInd
 						bodyPieceYCount = bodyPieceYCount + 1;
 						wormHead = WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece);
 					}
+					*/
 				}
 			}
 		}
 	}
 }
+
 
 WriggleWorm::WriggleWorm(const WriggleWorm & oldWorm) {
 	this->wormBody = vector<WormPiece>(oldWorm.wormBody);
@@ -70,53 +114,39 @@ WriggleWorm::WriggleWorm(const WriggleWorm & oldWorm) {
 	this->goalY = oldWorm.goalY;
 }
 
-
 WriggleWorm::~WriggleWorm() {
 }
 
-char WriggleWorm::allPossibleMoves(const vector<vector<char>> &puzzleGrid, vector<WormMove*> &allWormMoves) {
-	if (this->wormHead.xCoord - 1 >= 0 && puzzleGrid[this->wormHead.yCoord][this->wormHead.xCoord - 1] == 'e') {
-		allWormMoves.push_back(new WormMove(this->wormHead.yCoord, this->wormHead.xCoord - 1, this->wormIndex, true));
-
+//Finding all possible moves of tail and head of all of the wriggle worms within the puzzle
+void WriggleWorm::allPossibleMoves(const vector<vector<char>> &puzzleGrid, vector<WormMove*> &allWormMoves) {
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			if (!(i == j) && i == 0 || j == 0) {
+				if (this->wormHead.xCoord + j >= 0 && this->wormHead.xCoord + j  < puzzleGrid[this->wormHead.yCoord].size() && this->wormHead.yCoord + i >= 0 && 
+					this->wormHead.yCoord + i < puzzleGrid.size() && puzzleGrid[this->wormHead.yCoord + i][this->wormHead.xCoord + j] == 'e') {
+					allWormMoves.push_back(new WormMove(this->wormHead.yCoord + i, this->wormHead.xCoord + j, this->wormIndex, true));
+				}
+				if (this->wormTail.xCoord + j >= 0 && this->wormTail.xCoord + j  < puzzleGrid[this->wormTail.yCoord].size() && this->wormTail.yCoord + i >= 0 && 
+					this->wormTail.yCoord + i < puzzleGrid.size() && puzzleGrid[this->wormTail.yCoord + i][this->wormTail.xCoord + j] == 'e') {
+					allWormMoves.push_back(new WormMove(this->wormTail.yCoord + i, this->wormTail.xCoord + j, this->wormIndex, false));
+				}
+			}
+		}
 	}
-	if (this->wormHead.xCoord + 1 < puzzleGrid[this->wormHead.yCoord].size() && puzzleGrid[this->wormHead.yCoord][this->wormHead.xCoord + 1] == 'e') {
-		allWormMoves.push_back(new WormMove(this->wormHead.yCoord, this->wormHead.xCoord + 1, this->wormIndex, true));
-
-	}
-	if (this->wormHead.yCoord - 1 >= 0 && puzzleGrid[this->wormHead.yCoord - 1][this->wormHead.xCoord] == 'e') {
-		allWormMoves.push_back(new WormMove(this->wormHead.yCoord - 1, this->wormHead.xCoord, this->wormIndex, true));
-
-	}
-	if (this->wormHead.yCoord + 1 < puzzleGrid.size() && puzzleGrid[this->wormHead.yCoord + 1][this->wormHead.xCoord] == 'e') {
-		allWormMoves.push_back(new WormMove(this->wormHead.yCoord + 1, this->wormHead.xCoord, this->wormIndex, true));
-
-	}
-	if (this->wormTail.xCoord - 1 >= 0 && puzzleGrid[this->wormTail.yCoord][this->wormTail.xCoord - 1] == 'e') {
-		allWormMoves.push_back(new WormMove(this->wormTail.yCoord, this->wormTail.xCoord - 1, this->wormIndex, false));
-
-	}
-	if (this->wormTail.xCoord + 1 < puzzleGrid[this->wormTail.yCoord].size() && puzzleGrid[this->wormTail.yCoord][this->wormTail.xCoord + 1] == 'e') {
-		allWormMoves.push_back(new WormMove(this->wormTail.yCoord, this->wormTail.xCoord + 1, this->wormIndex, false));
-
-	}
-	if (this->wormTail.yCoord - 1 >= 0 && puzzleGrid[this->wormTail.yCoord - 1][this->wormTail.xCoord] == 'e') {
-		allWormMoves.push_back(new WormMove(this->wormTail.yCoord - 1, this->wormTail.xCoord, this->wormIndex, false));
-
-	}
-	if (this->wormTail.yCoord + 1 < puzzleGrid.size() && puzzleGrid[this->wormTail.yCoord + 1][this->wormTail.xCoord] == 'e') {
-		allWormMoves.push_back(new WormMove(this->wormTail.yCoord + 1, this->wormTail.xCoord, this->wormIndex, false));
-
-	}
-	return 0;
 }
 
-vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzzleGrid, const WormMove &wormMove) {
+//Creating the move of a certain wriggle worm's head or tail
+vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzzleGrid, const WormMove *wormMove) {
 	vector<vector<char>> newPuzzleGrid(puzzleGrid);
 	WriggleWorm newWriggleWorm = WriggleWorm(*this);
-	if (wormMove.isHead == 1) {
-		newPuzzleGrid[wormMove.yCoord][wormMove.xCoord] = this->wormHead.direction;
-		newWriggleWorm.wormHead.xCoord = wormMove.xCoord;
-		newWriggleWorm.wormHead.yCoord = wormMove.yCoord;
+
+	//If the head is moving
+	if (wormMove->isHead == 1) {
+		newPuzzleGrid[wormMove->yCoord][wormMove->xCoord] = this->wormHead.direction;
+		newWriggleWorm.wormHead.xCoord = wormMove->xCoord;
+		newWriggleWorm.wormHead.yCoord = wormMove->yCoord;
+
+		//If there is a body within the worm (other than the head and tail)
 		if (this->wormBody.size() > 0) {
 			for (int i = (this->wormBody.size() - 1); i >= 0; i--) {
 				if (i == (this->wormBody.size() - 1)) {
@@ -132,15 +162,22 @@ vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzz
 			newPuzzleGrid[this->wormBody[0].yCoord][this->wormBody[0].xCoord] = this->wormTail.direction;
 			newWriggleWorm.wormTail.xCoord = this->wormBody[0].xCoord;
 			newWriggleWorm.wormTail.yCoord = this->wormBody[0].yCoord;
+
+		//Otherwise just move the head and at this point move the tail where the head was.
 		} else {
+			newPuzzleGrid[this->wormHead.yCoord][this->wormHead.xCoord] = this->wormTail.direction;
 			newWriggleWorm.wormTail.xCoord = this->wormHead.xCoord;
 			newWriggleWorm.wormTail.yCoord = this->wormHead.yCoord;
 		}
 		newPuzzleGrid[this->wormTail.yCoord][this->wormTail.xCoord] = 'e';
+
+	//If move is beginning with tail.
 	} else {
-		newPuzzleGrid[wormMove.yCoord][wormMove.xCoord] = this->wormTail.direction;
-		newWriggleWorm.wormTail.xCoord = wormMove.xCoord;
-		newWriggleWorm.wormTail.yCoord = wormMove.yCoord;
+		newPuzzleGrid[wormMove->yCoord][wormMove->xCoord] = this->wormTail.direction;
+		newWriggleWorm.wormTail.xCoord = wormMove->xCoord;
+		newWriggleWorm.wormTail.yCoord = wormMove->yCoord;
+
+		//If there is a body within the worm (other than the head and tail)
 		if (this->wormBody.size() > 0) {
 			for (int i = 0; i < this->wormBody.size(); i++) {
 				if (i == 0) {
@@ -156,16 +193,26 @@ vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzz
 			newPuzzleGrid[this->wormBody[this->wormBody.size() - 1].yCoord][this->wormBody[this->wormBody.size() - 1].xCoord] = this->wormHead.direction;
 			newWriggleWorm.wormHead.xCoord = this->wormBody[this->wormBody.size() - 1].xCoord;
 			newWriggleWorm.wormHead.yCoord = this->wormBody[this->wormBody.size() - 1].yCoord;
+
+		//Otherwise just move the tail and at this point move the head where the head was.
 		} else {
+			newPuzzleGrid[this->wormTail.yCoord][this->wormTail.xCoord] = this->wormHead.direction;
 			newWriggleWorm.wormHead.xCoord = this->wormTail.xCoord;
 			newWriggleWorm.wormHead.yCoord = this->wormTail.yCoord;
 		}
 		newPuzzleGrid[this->wormHead.yCoord][this->wormHead.xCoord] = 'e';
 	}
 
+	//Fixing the direction of the worm to all go towards the tail.
+
+	//If there is a body (other than head and tail)
 	if (newWriggleWorm.wormBody.size() > 0) {
+
+		//Loop through body.
 		for (int i = 0; i < newWriggleWorm.wormBody.size(); i++) {
 			if (i == 0) {
+
+				//If first body piece attached to tail.
 				if (newWriggleWorm.wormBody[i].xCoord == newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormBody[i].yCoord < newWriggleWorm.wormTail.yCoord) {
 					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = 'v';
 
@@ -179,6 +226,8 @@ vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzz
 					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = '<';
 
 				}
+
+				//All other body pieces (from body to body)
 			} else {
 				if (newWriggleWorm.wormBody[i].xCoord == newWriggleWorm.wormBody[i - 1].xCoord && newWriggleWorm.wormBody[i].yCoord < newWriggleWorm.wormBody[i - 1].yCoord) {
 					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = 'v';
@@ -195,6 +244,8 @@ vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzz
 				}
 			}
 		}
+
+		//Fix the direction of the head
 		if (newWriggleWorm.wormHead.xCoord == newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].xCoord && newWriggleWorm.wormHead.yCoord < newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].yCoord) {
 			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'D';
 
@@ -208,6 +259,8 @@ vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzz
 			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'L';
 
 		}
+
+	//If no body just fix the direction of the Head directly towards the tail.
 	} else {
 		if (newWriggleWorm.wormHead.xCoord == newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormHead.yCoord < newWriggleWorm.wormTail.yCoord) {
 			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'D';
@@ -231,15 +284,19 @@ vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzz
 	return newPuzzleGrid;
 }
 
+//If the goal is found return true.
 bool WriggleWorm::isGoal() {
 	return ((this->wormHead.xCoord == goalX && this->wormHead.yCoord == goalY) || (this->wormTail.xCoord == goalX && this->wormTail.yCoord == goalY));
 }
 
-void WriggleWorm::printPuzzle(const vector<vector<char>> &puzzleGrid) {
+//To allow printing of the puzzle (or outputting to the file).
+ostream& operator<<(ostream& out, const vector<vector<char>> &puzzleGrid) {
 	for (vector<vector<char>>::const_iterator i = puzzleGrid.begin(); i != puzzleGrid.end(); ++i) {
 		for (vector<char>::const_iterator j = i->begin(); j != i->end(); ++j) {
-			cout << *j << ' ';
+			out << *j << ' ';
 		}
-		cout << endl;
+		out << endl;
 	}
+
+	return out;
 }

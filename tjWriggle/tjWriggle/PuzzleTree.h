@@ -10,10 +10,12 @@
 using namespace std;
 
 struct PuzzleNode {
+	//Move made from a parent on the tree to the child (stored with the child)
 	WormMove* parentMove;
 	vector<vector<char>> gameGrid;
 	vector<PuzzleNode*> children;
 	PuzzleNode* parent;
+	int nodeDepth;
 
 	PuzzleNode() {};
 
@@ -22,10 +24,16 @@ struct PuzzleNode {
 		this->parent = parent;
 		this->parentMove = parentMove;
 		this->children = vector<PuzzleNode*>();
+		if (parent != NULL) {
+			this->nodeDepth = parent->nodeDepth + 1;
+		} else {
+			this->nodeDepth = 0;
+		}
 	};
-
 	~PuzzleNode() {
-		delete parent;
+		for (vector<PuzzleNode*>::iterator i = children.begin(); i != children.end(); ++i) {
+			delete *i;
+		}
 		delete parentMove;
 	};
 };
