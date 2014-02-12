@@ -9,6 +9,7 @@
 #include <time.h>
 #include <stack>
 #include <unordered_map>
+#include <boost/unordered_map.hpp>
 
 #include "WriggleWorm.h"
 #include "PuzzleTree.h"
