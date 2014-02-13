@@ -20,22 +20,22 @@ WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleInd
 				wormTail = WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece);
 
 				//While not reaching the head of the worm
+
 				while ('U' != currentBodyPiece && 'D' != currentBodyPiece && 'R' != currentBodyPiece && 'L' != currentBodyPiece) {
-					bool breaker = false;
+					/*bool breaker = false;
 					for (int k = -1; k <= 1; k++) {
 						for (int l = -1; l <= 1; l++) {
 							if (!(k == l) && k == 0 || l == 0) {
 								if (bodyPieceXCount + l >= 0 && bodyPieceXCount + l < puzzleGrid[bodyPieceYCount].size() && 
 									bodyPieceYCount + k >= 0 && bodyPieceYCount + k < puzzleGrid.size()) {
-
-									if (puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l] == directionMap[{ char(l), char(k) }]) {
+									if (puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l] == directionMap[{ l, k }]) {
 										currentBodyPiece = puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l];
 										bodyPieceXCount = bodyPieceXCount + l;
 										bodyPieceYCount = bodyPieceYCount + k;
 										wormBody.push_back(WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece));
 										breaker = true;
 										break;
-									} else if (puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l] == headDirectionMap[{ char(l), char(k) }]) {
+									} else if (puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l] == headDirectionMap[{ l, k }]) {
 										currentBodyPiece = puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l];
 										bodyPieceXCount = bodyPieceXCount + l;
 										bodyPieceYCount = bodyPieceYCount + k;
@@ -46,9 +46,9 @@ WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleInd
 								}
 							}
 						}
-						if (breaker) { break; }
-					}
-					/*
+						if (breaker == true) { break; }
+					}*/
+
 					if (bodyPieceXCount - 1 >= 0 && puzzleGrid[bodyPieceYCount][bodyPieceXCount - 1] == '>') {
 						currentBodyPiece = puzzleGrid[bodyPieceYCount][bodyPieceXCount - 1];
 						bodyPieceXCount = bodyPieceXCount - 1;
@@ -89,7 +89,6 @@ WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleInd
 						bodyPieceYCount = bodyPieceYCount + 1;
 						wormHead = WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece);
 					}
-					*/
 				}
 			}
 		}

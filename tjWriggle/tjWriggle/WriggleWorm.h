@@ -74,8 +74,8 @@ public:
 	}
 	static boost::unordered_map<pair<char, char>, char> populateHeadMap() {
 		boost::unordered_map <pair<char, char>, char> map = boost::unordered_map<pair<char, char>, char>();
-		map.insert({ { -1, 0 }, 'L' });
-		map.insert({ { 1, 0 }, 'R' });
+		map.insert({ { -1, 0 }, 'R' });
+		map.insert({ { 1, 0 }, 'L' });
 		map.insert({ { 0, -1 }, 'D' });
 		map.insert({ { 0, 1 }, 'U' });
 		return map;

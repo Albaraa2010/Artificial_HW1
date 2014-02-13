@@ -19,7 +19,7 @@ using namespace std;
 //Print all of the possible moves stored within allWormMoves
 void printAllMoves(const vector<WormMove*> &allWormMoves) {
 	for (vector<WormMove*>::const_iterator i = allWormMoves.begin(); i != allWormMoves.end(); ++i) {
-		cout << (*i);
+		cout << (**i);
 	}
 }
 
@@ -112,7 +112,8 @@ void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> &puzzleGrid, 
 		resultTree = PuzzleTree(puzzleGrid);
 		currentChildrenList = stack<PuzzleNode*>();
 		depthLimit++;
-		cout << depthLimit << endl;
+		clock_t tempTime = clock();
+		cout << tempTime << ' ' << depthLimit << endl;
 	}
 
 	//Going back to get the path of the result
@@ -135,6 +136,9 @@ void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> &puzzleGrid, 
 	resultFile << resultMoves.size();
 
 	resultFile.close();
+	cout << (lastNode->gameGrid);
+	cout << (endTime - startTime) << endl;
+	cout << resultMoves.size();
 }
 /*
 void breadthFirstTreeSearch(vector<vector<char>> &puzzleGrid, short numWriggle) {
