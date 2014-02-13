@@ -1,10 +1,8 @@
 #include "WriggleWorm.h"
 
 
-unordered_map<string, char> WriggleWorm::directionMap = WriggleWorm::populateMap();
-unordered_map<string, char> WriggleWorm::headDirectionMap = WriggleWorm::populateHeadMap();
-//unordered_map<Key, char>::const_iterator gotBody;
-//unordered_map<Key, char>::const_iterator gotHead;
+boost::unordered_map<pair<char, char>, char> WriggleWorm::directionMap = WriggleWorm::populateMap();
+boost::unordered_map<pair<char, char>, char> WriggleWorm::headDirectionMap = WriggleWorm::populateHeadMap();
 
 //Creating wriggle worm to identify with as a wriggle worm within the puzzle.
 WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleIndex) {
@@ -24,29 +22,23 @@ WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleInd
 				//While not reaching the head of the worm
 				while ('U' != currentBodyPiece && 'D' != currentBodyPiece && 'R' != currentBodyPiece && 'L' != currentBodyPiece) {
 					bool breaker = false;
-					for (int i = -1; i <= 1; i++) {
-						for (int j = -1; j <= 1; j++) {
-							if (!(i == j) && i == 0 || j == 0) {
-								if (bodyPieceXCount + j >= 0 && bodyPieceXCount + j < puzzleGrid[bodyPieceYCount].size() && 
-									bodyPieceYCount + i >= 0 && bodyPieceYCount + i < puzzleGrid.size()) {
-									//gotBody = directionMap.find({ to_string(j), to_string(i) });
-									//gotHead = headDirectionMap.find({ to_string(j), to_string(i) });
-									//char bodyGot = gotBody->second;
-									//char headGot = gotHead->second;
-									char bodyGot = directionMap[{ to_string(j), to_string(i) }];
-									char headGot = headDirectionMap[{ to_string(j), to_string(i) }];
+					for (int k = -1; k <= 1; k++) {
+						for (int l = -1; l <= 1; l++) {
+							if (!(k == l) && k == 0 || l == 0) {
+								if (bodyPieceXCount + l >= 0 && bodyPieceXCount + l < puzzleGrid[bodyPieceYCount].size() && 
+									bodyPieceYCount + k >= 0 && bodyPieceYCount + k < puzzleGrid.size()) {
 
-									if (puzzleGrid[bodyPieceYCount + i][bodyPieceXCount + j] == bodyGot) {
-										currentBodyPiece = puzzleGrid[bodyPieceYCount + i][bodyPieceXCount + j];
-										bodyPieceXCount = bodyPieceXCount + j;
-										bodyPieceYCount = bodyPieceYCount + i;
+									if (puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l] == directionMap[{ char(l), char(k) }]) {
+										currentBodyPiece = puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l];
+										bodyPieceXCount = bodyPieceXCount + l;
+										bodyPieceYCount = bodyPieceYCount + k;
 										wormBody.push_back(WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece));
 										breaker = true;
 										break;
-									} else if (puzzleGrid[bodyPieceYCount + i][bodyPieceXCount + j] == headGot) {
-										currentBodyPiece = puzzleGrid[bodyPieceYCount + i][bodyPieceXCount + j];
-										bodyPieceXCount = bodyPieceXCount + j;
-										bodyPieceYCount = bodyPieceYCount + i;
+									} else if (puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l] == headDirectionMap[{ char(l), char(k) }]) {
+										currentBodyPiece = puzzleGrid[bodyPieceYCount + k][bodyPieceXCount + l];
+										bodyPieceXCount = bodyPieceXCount + l;
+										bodyPieceYCount = bodyPieceYCount + k;
 										wormHead = WormPiece(bodyPieceYCount, bodyPieceXCount, currentBodyPiece);
 										breaker = true;
 										break;

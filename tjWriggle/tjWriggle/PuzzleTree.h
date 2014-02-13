@@ -31,10 +31,10 @@ struct PuzzleNode {
 		}
 	};
 	~PuzzleNode() {
-		for (vector<PuzzleNode*>::iterator i = children.begin(); i != children.end(); ++i) {
+		/*for (vector<PuzzleNode*>::iterator i = children.begin(); i != children.end(); ++i) {
 			delete *i;
 		}
-		delete parentMove;
+		delete parentMove;*/
 	};
 };
 
@@ -48,5 +48,4 @@ public:
 	PuzzleNode* insert(PuzzleNode* parent, WormMove* parentMove, const vector<vector<char>> &gameGrid);
 	~PuzzleTree();
 };
-
 #endif
