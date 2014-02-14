@@ -3,8 +3,8 @@
 PuzzleTree::PuzzleTree() {
 }
 
-PuzzleTree::PuzzleTree(const vector<vector<char>> &gameGrid) {
-	this->root = PuzzleNode(gameGrid, NULL, NULL); 
+PuzzleTree::PuzzleTree(vector<vector<char>>* gameGrid, map<char, WriggleWorm>* allWorms) {
+	this->root = PuzzleNode(gameGrid, NULL, NULL, allWorms); 
 }
 
 PuzzleNode* PuzzleTree::getRoot() {
@@ -15,8 +15,8 @@ PuzzleTree::~PuzzleTree() {
 }
 
 //Inserting a puzzle in the tree.
-PuzzleNode* PuzzleTree::insert(PuzzleNode* parent, WormMove* parentMove, const vector<vector<char>> &gameGrid) {
-	PuzzleNode* resultPuzzle = new PuzzleNode(gameGrid, parent, parentMove);
+PuzzleNode* PuzzleTree::insert(PuzzleNode* parent, WormMove* parentMove, vector<vector<char>>* gameGrid, map<char, WriggleWorm>* allWorms) {
+	PuzzleNode* resultPuzzle = new PuzzleNode(gameGrid, parent, parentMove, allWorms);
 	parent->children.push_back(resultPuzzle);
 
 	return resultPuzzle;

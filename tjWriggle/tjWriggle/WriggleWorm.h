@@ -56,7 +56,7 @@ public:
 	void allPossibleMoves(const vector<vector<char>> &puzzleGrid, vector<WormMove*> &allWormMoves);
 
 	//Does the move and fixes the directions of the worm.
-	vector<vector<char>> newMovePuzzle(const vector<vector<char>> &puzzleGrid, const WormMove *wormMove);
+	vector<vector<char>>* newMovePuzzle(vector<vector<char>> *puzzleGrid, const WormMove *wormMove, const WriggleWorm newWriggleWorm);
 
 	//To output the puzzle to a file through the use of << operator
 	friend ostream& operator<<(ostream& out, const vector<vector<char>> &puzzleGrid);

@@ -24,9 +24,9 @@ void printAllMoves(const vector<WormMove*> &allWormMoves) {
 }
 
 //If goal is reached of worm index '0' 
-bool isGoalReached(map<char, WriggleWorm> allWorms) {
-	if (allWorms.size() > 0) {
-		return allWorms['0'].isGoal();
+bool isGoalReached(map<char, WriggleWorm>* allWorms) {
+	if (allWorms && allWorms->size() > 0) {
+		return allWorms->at('0').isGoal();
 	} else {
 		return false;
 	}
@@ -52,53 +52,55 @@ char *hashGrid (PuzzleNode* node) {
 }
 */
 
-void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> &puzzleGrid, short numWriggle) {
+void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> *puzzleGrid, short numWriggle) {
 	clock_t startTime = clock();
-	map<char, WriggleWorm> allWorms;
 	vector<WormMove*> resultMoves;
 	PuzzleNode* currentNode;
 	int depthLimit = 0;
-
+	map<char, WriggleWorm>* allWorms = NULL;
 	//While tail or head have not reached the goal indexed at bottom right corner. 
 	while (!isGoalReached(allWorms)) {
-
+		allWorms = new map<char, WriggleWorm>();
+		char firstBuffer[2];
 		//Initializing tree
-		PuzzleTree resultTree = PuzzleTree(puzzleGrid);
+		PuzzleTree resultTree = PuzzleTree(puzzleGrid, allWorms);
 		//Using root as current node
 		currentNode = resultTree.getRoot();
 		//Initializing stack
 		stack<PuzzleNode*> currentChildrenList;
 		//Putting root as first item within stack
 		currentChildrenList.push(resultTree.getRoot());
+		for (int i = 0; i < numWriggle; i++) {
+			_itoa_s(i, firstBuffer, 10);
+			//Inserting all wriggle worms in allworms
+			allWorms->insert(pair<char, WriggleWorm>(firstBuffer[0], WriggleWorm(*(currentNode->gameGrid), firstBuffer[0])));
+		}
 
 		//While stack is not empty
 		while (!currentChildrenList.empty()) {
-			
 			vector<WormMove*> allWormMoves;
-			allWorms = map<char, WriggleWorm>();
+			allWormMoves.reserve(8);
 			currentNode = currentChildrenList.top();
+			allWorms = currentNode->getAllWorms();
 			currentChildrenList.pop();
 			//unordered_map<const char*, PuzzleNode*, hash<const char *>, eqstr> allStates;
 
 			char buffer[2];
 
-			for (int i = 0; i < numWriggle; i++) {
-				_itoa_s(i, buffer, 10);
-				//Inserting all wriggle worms in allworms
-				allWorms.insert(pair<char, WriggleWorm>(buffer[0], WriggleWorm(currentNode->gameGrid, buffer[0])));
-
+			for (map<char, WriggleWorm>::iterator iter = allWorms->begin(); iter != allWorms->end(); ++iter) {
 				//Inserting all moves of each wriggle worm found into allWormMoves 
-				allWorms[buffer[0]].allPossibleMoves(currentNode->gameGrid, allWormMoves);
+				iter->second.allPossibleMoves(*currentNode->gameGrid, allWormMoves);
 			}
 			if (isGoalReached(allWorms)) {
 				break;
 			}
 			if (currentNode->nodeDepth < depthLimit) {
-				for (int i = allWormMoves.size() - 1; i >= 0; i--) {
+				for (auto iter: allWormMoves) {
+					map<char, WriggleWorm>* newWormSet = new map<char, WriggleWorm>(*allWorms);
 					//Creating the new move 
-					vector<vector<char>> newGrid = allWorms[allWormMoves[i]->wormIndex].newMovePuzzle(currentNode->gameGrid, allWormMoves[i]);
+					vector<vector<char>>* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode->gameGrid, iter, allWorms->at(iter->wormIndex));
 					//Inserting new grid in tree
-					PuzzleNode* temp = resultTree.insert(currentNode, allWormMoves[i], newGrid);
+					PuzzleNode* temp = resultTree.insert(currentNode, iter, newGrid, newWormSet);
 					//char* hash = hashGrid(temp);
 
 					//if (allStates.find(hash) == allStates.end()) {
@@ -109,11 +111,10 @@ void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> &puzzleGrid, 
 				}
 			}
 		}
-		resultTree = PuzzleTree(puzzleGrid);
 		currentChildrenList = stack<PuzzleNode*>();
 		depthLimit++;
 		clock_t tempTime = clock();
-		cout << tempTime << ' ' << depthLimit << endl;
+		cout << (tempTime - startTime) << ' ' << depthLimit << endl;
 	}
 
 	//Going back to get the path of the result
@@ -131,12 +132,15 @@ void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> &puzzleGrid, 
 	for (vector<WormMove*>::reverse_iterator it = resultMoves.rbegin(); it != resultMoves.rend(); ++it) {
 		resultFile << (**it);
 	}
-	resultFile << (lastNode->gameGrid);
+	resultFile << *(lastNode->gameGrid);
 	resultFile << (endTime - startTime) << endl;
 	resultFile << resultMoves.size();
 
 	resultFile.close();
-	cout << (lastNode->gameGrid);
+	for (vector<WormMove*>::reverse_iterator it = resultMoves.rbegin(); it != resultMoves.rend(); ++it) {
+		cout << (**it);
+	}
+	cout << *(lastNode->gameGrid);
 	cout << (endTime - startTime) << endl;
 	cout << resultMoves.size();
 }
@@ -189,7 +193,7 @@ int main(int argc, char* argv[]) {
 	short lineCount = 0;
 	short charCount = 0;
 	short width, height, numWriggle;
-	vector<vector<char>> puzzleGrid;
+	vector<vector<char>>* puzzleGrid;
 
 	puzzleFile.open(puzzleName);
 
@@ -216,7 +220,7 @@ int main(int argc, char* argv[]) {
 
 					case 2:
 						numWriggle = static_cast<short>(character - '0');
-						puzzleGrid = vector<vector<char>>(height, vector<char>(width, ' '));
+						puzzleGrid = new  vector<vector<char>>(height, vector<char>(width, ' '));
 						break;
 					}
 				} else {
@@ -224,7 +228,7 @@ int main(int argc, char* argv[]) {
 				}
 			} else if (lineCount >= 1) {
 				if (' ' != character && lineCount - 1 < height && charCount < width) {
-					puzzleGrid[lineCount - 1][charCount++] = character;
+					puzzleGrid->at(lineCount - 1)[charCount++] = character;
 				}
 			}
 		}

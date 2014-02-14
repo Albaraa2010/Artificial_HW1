@@ -127,147 +127,165 @@ void WriggleWorm::allPossibleMoves(const vector<vector<char>> &puzzleGrid, vecto
 }
 
 //Creating the move of a certain wriggle worm's head or tail
-vector<vector<char>> WriggleWorm::newMovePuzzle(const vector<vector<char>> &puzzleGrid, const WormMove *wormMove) {
-	vector<vector<char>> newPuzzleGrid(puzzleGrid);
-	WriggleWorm newWriggleWorm = WriggleWorm(*this);
-
+vector<vector<char>>* WriggleWorm::newMovePuzzle(vector<vector<char>>* puzzleGrid, const WormMove *wormMove, const WriggleWorm oldWriggleWorm) {
+	vector<vector<char>>* newPuzzleGrid = new vector<vector<char>>(*puzzleGrid);
 	//If the head is moving
 	if (wormMove->isHead == 1) {
-		newPuzzleGrid[wormMove->yCoord][wormMove->xCoord] = this->wormHead.direction;
-		newWriggleWorm.wormHead.xCoord = wormMove->xCoord;
-		newWriggleWorm.wormHead.yCoord = wormMove->yCoord;
+		(*newPuzzleGrid)[wormMove->yCoord][wormMove->xCoord] = oldWriggleWorm.wormHead.direction;
+		this->wormHead.xCoord = wormMove->xCoord;
+		this->wormHead.yCoord = wormMove->yCoord;
 
 		//If there is a body within the worm (other than the head and tail)
-		if (this->wormBody.size() > 0) {
-			for (int i = (this->wormBody.size() - 1); i >= 0; i--) {
-				if (i == (this->wormBody.size() - 1)) {
-					newPuzzleGrid[this->wormHead.yCoord][this->wormHead.xCoord] = this->wormBody[i].direction;
-					newWriggleWorm.wormBody[i].xCoord = this->wormHead.xCoord;
-					newWriggleWorm.wormBody[i].yCoord = this->wormHead.yCoord;
+		if (oldWriggleWorm.wormBody.size() > 0) {
+			for (int i = (oldWriggleWorm.wormBody.size() - 1); i >= 0; i--) {
+				if (i == (oldWriggleWorm.wormBody.size() - 1)) {
+					(*newPuzzleGrid)[oldWriggleWorm.wormHead.yCoord][oldWriggleWorm.wormHead.xCoord] = oldWriggleWorm.wormBody[i].direction;
+					this->wormBody[i].xCoord = oldWriggleWorm.wormHead.xCoord;
+					this->wormBody[i].yCoord = oldWriggleWorm.wormHead.yCoord;
 				} else {
-					newPuzzleGrid[this->wormBody[i + 1].yCoord][this->wormBody[i + 1].xCoord] = this->wormBody[i].direction;
-					newWriggleWorm.wormBody[i].xCoord = this->wormBody[i + 1].xCoord;
-					newWriggleWorm.wormBody[i].yCoord = this->wormBody[i + 1].yCoord;
+					(*newPuzzleGrid)[oldWriggleWorm.wormBody[i + 1].yCoord][oldWriggleWorm.wormBody[i + 1].xCoord] = oldWriggleWorm.wormBody[i].direction;
+					this->wormBody[i].xCoord = oldWriggleWorm.wormBody[i + 1].xCoord;
+					this->wormBody[i].yCoord = oldWriggleWorm.wormBody[i + 1].yCoord;
 				}
 			}
-			newPuzzleGrid[this->wormBody[0].yCoord][this->wormBody[0].xCoord] = this->wormTail.direction;
-			newWriggleWorm.wormTail.xCoord = this->wormBody[0].xCoord;
-			newWriggleWorm.wormTail.yCoord = this->wormBody[0].yCoord;
+			(*newPuzzleGrid)[oldWriggleWorm.wormBody[0].yCoord][oldWriggleWorm.wormBody[0].xCoord] = oldWriggleWorm.wormTail.direction;
+			this->wormTail.xCoord = oldWriggleWorm.wormBody[0].xCoord;
+			this->wormTail.yCoord = oldWriggleWorm.wormBody[0].yCoord;
 
 		//Otherwise just move the head and at this point move the tail where the head was.
 		} else {
-			newPuzzleGrid[this->wormHead.yCoord][this->wormHead.xCoord] = this->wormTail.direction;
-			newWriggleWorm.wormTail.xCoord = this->wormHead.xCoord;
-			newWriggleWorm.wormTail.yCoord = this->wormHead.yCoord;
+			(*newPuzzleGrid)[oldWriggleWorm.wormHead.yCoord][oldWriggleWorm.wormHead.xCoord] = oldWriggleWorm.wormTail.direction;
+			this->wormTail.xCoord = oldWriggleWorm.wormHead.xCoord;
+			this->wormTail.yCoord = oldWriggleWorm.wormHead.yCoord;
 		}
-		newPuzzleGrid[this->wormTail.yCoord][this->wormTail.xCoord] = 'e';
+		(*newPuzzleGrid)[oldWriggleWorm.wormTail.yCoord][oldWriggleWorm.wormTail.xCoord] = 'e';
 
 	//If move is beginning with tail.
 	} else {
-		newPuzzleGrid[wormMove->yCoord][wormMove->xCoord] = this->wormTail.direction;
-		newWriggleWorm.wormTail.xCoord = wormMove->xCoord;
-		newWriggleWorm.wormTail.yCoord = wormMove->yCoord;
+		(*newPuzzleGrid)[wormMove->yCoord][wormMove->xCoord] = oldWriggleWorm.wormTail.direction;
+		this->wormTail.xCoord = wormMove->xCoord;
+		this->wormTail.yCoord = wormMove->yCoord;
 
 		//If there is a body within the worm (other than the head and tail)
-		if (this->wormBody.size() > 0) {
-			for (int i = 0; i < this->wormBody.size(); i++) {
+		if (oldWriggleWorm.wormBody.size() > 0) {
+			for (int i = 0; i < oldWriggleWorm.wormBody.size(); i++) {
 				if (i == 0) {
-					newPuzzleGrid[this->wormTail.yCoord][this->wormTail.xCoord] = this->wormBody[i].direction;
-					newWriggleWorm.wormBody[i].xCoord = this->wormTail.xCoord;
-					newWriggleWorm.wormBody[i].yCoord = this->wormTail.yCoord;
+					(*newPuzzleGrid)[oldWriggleWorm.wormTail.yCoord][oldWriggleWorm.wormTail.xCoord] = oldWriggleWorm.wormBody[i].direction;
+					this->wormBody[i].xCoord = oldWriggleWorm.wormTail.xCoord;
+					this->wormBody[i].yCoord = oldWriggleWorm.wormTail.yCoord;
 				} else {
-					newPuzzleGrid[this->wormBody[i - 1].yCoord][this->wormBody[i - 1].xCoord] = this->wormBody[i].direction;
-					newWriggleWorm.wormBody[i].xCoord = this->wormBody[i - 1].xCoord;
-					newWriggleWorm.wormBody[i].yCoord = this->wormBody[i - 1].yCoord;
+					(*newPuzzleGrid)[oldWriggleWorm.wormBody[i - 1].yCoord][oldWriggleWorm.wormBody[i - 1].xCoord] = oldWriggleWorm.wormBody[i].direction;
+					this->wormBody[i].xCoord = oldWriggleWorm.wormBody[i - 1].xCoord;
+					this->wormBody[i].yCoord = oldWriggleWorm.wormBody[i - 1].yCoord;
 				}
 			}
-			newPuzzleGrid[this->wormBody[this->wormBody.size() - 1].yCoord][this->wormBody[this->wormBody.size() - 1].xCoord] = this->wormHead.direction;
-			newWriggleWorm.wormHead.xCoord = this->wormBody[this->wormBody.size() - 1].xCoord;
-			newWriggleWorm.wormHead.yCoord = this->wormBody[this->wormBody.size() - 1].yCoord;
+			(*newPuzzleGrid)[oldWriggleWorm.wormBody[oldWriggleWorm.wormBody.size() - 1].yCoord][oldWriggleWorm.wormBody[oldWriggleWorm.wormBody.size() - 1].xCoord] = oldWriggleWorm.wormHead.direction;
+			this->wormHead.xCoord = oldWriggleWorm.wormBody[oldWriggleWorm.wormBody.size() - 1].xCoord;
+			this->wormHead.yCoord = oldWriggleWorm.wormBody[oldWriggleWorm.wormBody.size() - 1].yCoord;
 
 		//Otherwise just move the tail and at this point move the head where the head was.
 		} else {
-			newPuzzleGrid[this->wormTail.yCoord][this->wormTail.xCoord] = this->wormHead.direction;
-			newWriggleWorm.wormHead.xCoord = this->wormTail.xCoord;
-			newWriggleWorm.wormHead.yCoord = this->wormTail.yCoord;
+			(*newPuzzleGrid)[oldWriggleWorm.wormTail.yCoord][oldWriggleWorm.wormTail.xCoord] = oldWriggleWorm.wormHead.direction;
+			this->wormHead.xCoord = oldWriggleWorm.wormTail.xCoord;
+			this->wormHead.yCoord = oldWriggleWorm.wormTail.yCoord;
 		}
-		newPuzzleGrid[this->wormHead.yCoord][this->wormHead.xCoord] = 'e';
+		(*newPuzzleGrid)[oldWriggleWorm.wormHead.yCoord][oldWriggleWorm.wormHead.xCoord] = 'e';
 	}
 
 	//Fixing the direction of the worm to all go towards the tail.
 
 	//If there is a body (other than head and tail)
-	if (newWriggleWorm.wormBody.size() > 0) {
+	if (this->wormBody.size() > 0) {
 
 		//Loop through body.
-		for (int i = 0; i < newWriggleWorm.wormBody.size(); i++) {
+		for (int i = 0; i < this->wormBody.size(); i++) {
 			if (i == 0) {
 
 				//If first body piece attached to tail.
-				if (newWriggleWorm.wormBody[i].xCoord == newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormBody[i].yCoord < newWriggleWorm.wormTail.yCoord) {
-					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = 'v';
+				if (this->wormBody[i].xCoord == this->wormTail.xCoord && this->wormBody[i].yCoord < this->wormTail.yCoord) {
+					(*newPuzzleGrid)[this->wormBody[i].yCoord][this->wormBody[i].xCoord] = 'v';
+					this->wormBody[i].direction = 'v';
 
-				} else if (newWriggleWorm.wormBody[i].xCoord == newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormBody[i].yCoord > newWriggleWorm.wormTail.yCoord) {
-					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = '^';
+				} else if (this->wormBody[i].xCoord == this->wormTail.xCoord && this->wormBody[i].yCoord > this->wormTail.yCoord) {
+					(*newPuzzleGrid)[this->wormBody[i].yCoord][this->wormBody[i].xCoord] = '^';
+					this->wormBody[i].direction = '^';
 
-				} else if (newWriggleWorm.wormBody[i].xCoord < newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormBody[i].yCoord == newWriggleWorm.wormTail.yCoord) {
-					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = '>';
+				} else if (this->wormBody[i].xCoord < this->wormTail.xCoord && this->wormBody[i].yCoord == this->wormTail.yCoord) {
+					(*newPuzzleGrid)[this->wormBody[i].yCoord][this->wormBody[i].xCoord] = '>';
+					this->wormBody[i].direction = '>';
 
-				} else if (newWriggleWorm.wormBody[i].xCoord > newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormBody[i].yCoord == newWriggleWorm.wormTail.yCoord) {
-					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = '<';
+				} else if (this->wormBody[i].xCoord > this->wormTail.xCoord && this->wormBody[i].yCoord == this->wormTail.yCoord) {
+					(*newPuzzleGrid)[this->wormBody[i].yCoord][this->wormBody[i].xCoord] = '<';
+					this->wormBody[i].direction = '<';
 
 				}
 
 				//All other body pieces (from body to body)
 			} else {
-				if (newWriggleWorm.wormBody[i].xCoord == newWriggleWorm.wormBody[i - 1].xCoord && newWriggleWorm.wormBody[i].yCoord < newWriggleWorm.wormBody[i - 1].yCoord) {
-					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = 'v';
+				if (this->wormBody[i].xCoord == this->wormBody[i - 1].xCoord && this->wormBody[i].yCoord < this->wormBody[i - 1].yCoord) {
+					(*newPuzzleGrid)[this->wormBody[i].yCoord][this->wormBody[i].xCoord] = 'v';
+					this->wormBody[i].direction = 'v';
 
-				} else if (newWriggleWorm.wormBody[i].xCoord == newWriggleWorm.wormBody[i - 1].xCoord && newWriggleWorm.wormBody[i].yCoord > newWriggleWorm.wormBody[i - 1].yCoord) {
-					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = '^';
+				} else if (this->wormBody[i].xCoord == this->wormBody[i - 1].xCoord && this->wormBody[i].yCoord > this->wormBody[i - 1].yCoord) {
+					(*newPuzzleGrid)[this->wormBody[i].yCoord][this->wormBody[i].xCoord] = '^';
+					this->wormBody[i].direction = '^';
 
-				} else if (newWriggleWorm.wormBody[i].xCoord < newWriggleWorm.wormBody[i - 1].xCoord && newWriggleWorm.wormBody[i].yCoord == newWriggleWorm.wormBody[i - 1].yCoord) {
-					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = '>';
+				} else if (this->wormBody[i].xCoord < this->wormBody[i - 1].xCoord && this->wormBody[i].yCoord == this->wormBody[i - 1].yCoord) {
+					(*newPuzzleGrid)[this->wormBody[i].yCoord][this->wormBody[i].xCoord] = '>';
+					this->wormBody[i].direction = '>';
 
-				} else if (newWriggleWorm.wormBody[i].xCoord > newWriggleWorm.wormBody[i - 1].xCoord && newWriggleWorm.wormBody[i].yCoord == newWriggleWorm.wormBody[i - 1].yCoord) {
-					newPuzzleGrid[newWriggleWorm.wormBody[i].yCoord][newWriggleWorm.wormBody[i].xCoord] = '<';
+				} else if (this->wormBody[i].xCoord > this->wormBody[i - 1].xCoord && this->wormBody[i].yCoord == this->wormBody[i - 1].yCoord) {
+					(*newPuzzleGrid)[this->wormBody[i].yCoord][this->wormBody[i].xCoord] = '<';
+					this->wormBody[i].direction = '<';
 
 				}
 			}
 		}
 
 		//Fix the direction of the head
-		if (newWriggleWorm.wormHead.xCoord == newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].xCoord && newWriggleWorm.wormHead.yCoord < newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].yCoord) {
-			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'D';
+		if (this->wormHead.xCoord == this->wormBody[this->wormBody.size() - 1].xCoord && this->wormHead.yCoord < this->wormBody[this->wormBody.size() - 1].yCoord) {
+			(*newPuzzleGrid)[this->wormHead.yCoord][this->wormHead.xCoord] = 'D';
+			this->wormHead.direction = 'D';
 
-		} else if (newWriggleWorm.wormHead.xCoord == newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].xCoord && newWriggleWorm.wormHead.yCoord > newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].yCoord) {
-			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'U';
+		} else if (this->wormHead.xCoord == this->wormBody[this->wormBody.size() - 1].xCoord && this->wormHead.yCoord > this->wormBody[this->wormBody.size() - 1].yCoord) {
+			(*newPuzzleGrid)[this->wormHead.yCoord][this->wormHead.xCoord] = 'U';
+			this->wormHead.direction = 'U';
 
-		} else if (newWriggleWorm.wormHead.xCoord < newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].xCoord && newWriggleWorm.wormHead.yCoord == newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].yCoord) {
-			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'R';
+		} else if (this->wormHead.xCoord < this->wormBody[this->wormBody.size() - 1].xCoord && this->wormHead.yCoord == this->wormBody[this->wormBody.size() - 1].yCoord) {
+			(*newPuzzleGrid)[this->wormHead.yCoord][this->wormHead.xCoord] = 'R';
+			this->wormHead.direction = 'R';
 
-		} else if (newWriggleWorm.wormHead.xCoord > newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].xCoord && newWriggleWorm.wormHead.yCoord == newWriggleWorm.wormBody[newWriggleWorm.wormBody.size() - 1].yCoord) {
-			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'L';
+		} else if (this->wormHead.xCoord > this->wormBody[this->wormBody.size() - 1].xCoord && this->wormHead.yCoord == this->wormBody[this->wormBody.size() - 1].yCoord) {
+			(*newPuzzleGrid)[this->wormHead.yCoord][this->wormHead.xCoord] = 'L';
+			this->wormHead.direction = 'L';
 
 		}
 
 	//If no body just fix the direction of the Head directly towards the tail.
 	} else {
-		if (newWriggleWorm.wormHead.xCoord == newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormHead.yCoord < newWriggleWorm.wormTail.yCoord) {
-			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'D';
-			newPuzzleGrid[newWriggleWorm.wormTail.yCoord][newWriggleWorm.wormTail.xCoord] = this->wormTail.direction;
+		if (this->wormHead.xCoord == this->wormTail.xCoord && this->wormHead.yCoord < this->wormTail.yCoord) {
+			(*newPuzzleGrid)[this->wormHead.yCoord][this->wormHead.xCoord] = 'D';
+			this->wormHead.direction = 'D';
+			(*newPuzzleGrid)[this->wormTail.yCoord][this->wormTail.xCoord] = oldWriggleWorm.wormTail.direction;
+			this->wormTail.direction = oldWriggleWorm.wormTail.direction;
 
-		} else if (newWriggleWorm.wormHead.xCoord == newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormHead.yCoord > newWriggleWorm.wormTail.yCoord) {
-			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'U';
-			newPuzzleGrid[newWriggleWorm.wormTail.yCoord][newWriggleWorm.wormTail.xCoord] = this->wormTail.direction;
+		} else if (this->wormHead.xCoord == this->wormTail.xCoord && this->wormHead.yCoord > this->wormTail.yCoord) {
+			(*newPuzzleGrid)[this->wormHead.yCoord][this->wormHead.xCoord] = 'U';
+			this->wormHead.direction = 'U';
+			(*newPuzzleGrid)[this->wormTail.yCoord][this->wormTail.xCoord] = oldWriggleWorm.wormTail.direction;
+			this->wormTail.direction = oldWriggleWorm.wormTail.direction;
 
-		} else if (newWriggleWorm.wormHead.xCoord < newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormHead.yCoord == newWriggleWorm.wormTail.yCoord) {
-			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'R';
-			newPuzzleGrid[newWriggleWorm.wormTail.yCoord][newWriggleWorm.wormTail.xCoord] = this->wormTail.direction;
+		} else if (this->wormHead.xCoord < this->wormTail.xCoord && this->wormHead.yCoord == this->wormTail.yCoord) {
+			(*newPuzzleGrid)[this->wormHead.yCoord][this->wormHead.xCoord] = 'R';
+			this->wormHead.direction = 'R';
+			(*newPuzzleGrid)[this->wormTail.yCoord][this->wormTail.xCoord] = oldWriggleWorm.wormTail.direction;
+			this->wormTail.direction = oldWriggleWorm.wormTail.direction;
 
-		} else if (newWriggleWorm.wormHead.xCoord > newWriggleWorm.wormTail.xCoord && newWriggleWorm.wormHead.yCoord == newWriggleWorm.wormTail.yCoord) {
-			newPuzzleGrid[newWriggleWorm.wormHead.yCoord][newWriggleWorm.wormHead.xCoord] = 'L';
-			newPuzzleGrid[newWriggleWorm.wormTail.yCoord][newWriggleWorm.wormTail.xCoord] = this->wormTail.direction;
+		} else if (this->wormHead.xCoord > this->wormTail.xCoord && this->wormHead.yCoord == this->wormTail.yCoord) {
+			(*newPuzzleGrid)[this->wormHead.yCoord][this->wormHead.xCoord] = 'L';
+			this->wormHead.direction = 'L';
+			(*newPuzzleGrid)[this->wormTail.yCoord][this->wormTail.xCoord] = oldWriggleWorm.wormTail.direction;
+			this->wormTail.direction = oldWriggleWorm.wormTail.direction;
 
 		}
 	}

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <map>
+#include <algorithm>
 
 #include "WriggleWorm.h"
 
@@ -12,17 +14,19 @@ using namespace std;
 struct PuzzleNode {
 	//Move made from a parent on the tree to the child (stored with the child)
 	WormMove* parentMove;
-	vector<vector<char>> gameGrid;
+	vector<vector<char>>* gameGrid;
 	vector<PuzzleNode*> children;
+	map<char, WriggleWorm>* allWorms;
 	PuzzleNode* parent;
 	int nodeDepth;
 
 	PuzzleNode() {};
 
-	PuzzleNode(const vector<vector<char>> &gameGrid, PuzzleNode* parent, WormMove* parentMove) {
-		this->gameGrid = vector<vector<char>>(gameGrid);
+	PuzzleNode(vector<vector<char>>*  gameGrid, PuzzleNode* parent, WormMove* parentMove, map<char, WriggleWorm>* allWorms) {
+		this->gameGrid = gameGrid;
 		this->parent = parent;
 		this->parentMove = parentMove;
+		this->allWorms = allWorms;
 		this->children = vector<PuzzleNode*>();
 		if (parent != NULL) {
 			this->nodeDepth = parent->nodeDepth + 1;
@@ -31,11 +35,17 @@ struct PuzzleNode {
 		}
 	};
 	~PuzzleNode() {
-		/*for (vector<PuzzleNode*>::iterator i = children.begin(); i != children.end(); ++i) {
+		/*delete allWorms;
+		delete gameGrid;
+		for (vector<PuzzleNode*>::iterator i = children.begin(); i != children.end(); ++i) {
 			delete *i;
 		}
 		delete parentMove;*/
 	};
+
+	map<char, WriggleWorm>* getAllWorms() {
+		return allWorms;
+	}
 };
 
 class PuzzleTree {
@@ -43,9 +53,9 @@ private:
 	PuzzleNode root;
 public:
 	PuzzleTree();
-	PuzzleTree(const vector<vector<char>> &gameGrid);
+	PuzzleTree(vector<vector<char>>* gameGrid, map<char, WriggleWorm>* allWorms);
 	PuzzleNode* getRoot();
-	PuzzleNode* insert(PuzzleNode* parent, WormMove* parentMove, const vector<vector<char>> &gameGrid);
+	PuzzleNode* insert(PuzzleNode* parent, WormMove* parentMove, vector<vector<char>>* gameGrid, map<char, WriggleWorm>* allWorms);
 	~PuzzleTree();
 };
 #endif
