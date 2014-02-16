@@ -9,6 +9,7 @@
 #include <time.h>
 #include <stack>
 #include <boost/unordered_map.hpp>
+#include <boost/graph/adjacency_list.hpp>
 
 #include "WriggleWorm.h"
 #include "PuzzleTree.h"
@@ -31,26 +32,34 @@ bool isGoalReached(map<char, WriggleWorm>* allWorms) {
 		return false;
 	}
 }
-
-/*
-struct eqstr {
-	bool operator()(const char* n1, const char* n2) {
-		return strncmp(n1, n2, 64) == 0;
-	}
-};
-
-char *hashGrid (PuzzleNode* node) {
-	char* hashValue = new char[64]();
-	for (vector<vector<char>>::iterator i = node->gameGrid.begin(); i != node->gameGrid.end(); ++i) {
-		for (vector<char>::iterator j = i->begin(); j != i->end(); ++j) {
-			int firstIndex = i - node->gameGrid.begin();
-			int secondIndex = j - i->begin();
-			hashValue[firstIndex * i->size() + secondIndex] = *j;
+void GreedyBestFirstGraphSearch(vector<vector<char>> *puzzleGrid, short numWriggle) {
+	clock_t startTime = clock();
+	vector<WormMove*> resultMoves;
+	map<char, WriggleWorm>* allWorms = NULL;
+	typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS> myGraph;
+	myGraph allPuzzlesGraph;
+    boost::add_vertex(0, allPuzzlesGraph);
+	while (!isGoalReached(allWorms)) {
+		allWorms = new map<char, WriggleWorm>();
+		char firstBuffer[2];
+		for (int i = 0; i < numWriggle; i++) {
+			_itoa_s(i, firstBuffer, 10);
+			//Inserting all wriggle worms in allworms
+			allWorms->insert(pair<char, WriggleWorm>(firstBuffer[0], WriggleWorm(*(currentNode->gameGrid), firstBuffer[0])));
 		}
+
+	
 	}
-	return hashValue;
+	clock_t endTime = clock();
+
+	ofstream resultFile;
+
+	resultFile.open("resultFile.txt");
+
+
+	cout << (endTime - startTime) << endl;
+	cout << resultMoves.size();
 }
-*/
 
 void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> *puzzleGrid, short numWriggle) {
 	clock_t startTime = clock();
@@ -233,7 +242,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		iterativelyDeepeningDepthFirstTreeSearch(puzzleGrid, numWriggle);
+		GreedyBestFirstGraphSearch(puzzleGrid, numWriggle);
 	}
 
 	return 0;
