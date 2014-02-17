@@ -35,20 +35,16 @@ bool isGoalReached(map<char, WriggleWorm>* allWorms) {
 struct puzzleGraphNode {
 	vector<vector<char>>* gameGrid;
 };
-void GreedyBestFirstGraphSearch(vector<vector<char>> *puzzleGrid, short numWriggle) {
+void greedyBestFirstGraphSearch(vector<vector<char>> *puzzleGrid, short numWriggle) {
 	clock_t startTime = clock();
 	vector<WormMove*> resultMoves;
-	vector<vector<vector<char>>*> allNodes;
 	vector<vector<char>>* currentNode;
+	vector<vector<char>>* currentParentNode;
 	map<char, WriggleWorm>* allWorms = NULL;
 	boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, puzzleGraphNode ,boost::property<boost::edge_weight_t, int> > allPuzzlesGraph;
 
 	currentNode = puzzleGrid;
-	allNodes.push_back(currentNode);
 	int temp = boost::add_vertex(allPuzzlesGraph);
-	cout << temp << endl;
-	temp = boost::add_vertex(allPuzzlesGraph);
-	cout << temp << endl;
 	allPuzzlesGraph[temp].gameGrid = currentNode;
 
 	while (!isGoalReached(allWorms)) {
@@ -65,14 +61,15 @@ void GreedyBestFirstGraphSearch(vector<vector<char>> *puzzleGrid, short numWrigg
 			iter->second.allPossibleMoves(*currentNode, allWormMoves);
 		}
 		for (auto iter : allWormMoves) {
+			int tempGraphIndex;
 			map<char, WriggleWorm>* newWormSet = new map<char, WriggleWorm>(*allWorms);
 			//Creating the new move 
 			vector<vector<char>>* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode, iter, allWorms->at(iter->wormIndex));
 			//Inserting new grid in graph
-			boost::add_vertex(allPuzzlesGraph);
-			allNodes.push_back(newGrid);
-			//Check heuristic
-			boost::add_edge(0, 0, 0, allPuzzlesGraph);
+			tempGraphIndex = boost::add_vertex(allPuzzlesGraph);
+			allPuzzlesGraph[tempGraphIndex].gameGrid = newGrid;
+			cout << *allPuzzlesGraph[tempGraphIndex].gameGrid;
+			cout << endl;
 		}
 	}
 	clock_t endTime = clock();
@@ -267,7 +264,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		GreedyBestFirstGraphSearch(puzzleGrid, numWriggle);
+		greedyBestFirstGraphSearch(puzzleGrid, numWriggle);
 	}
 
 	return 0;
