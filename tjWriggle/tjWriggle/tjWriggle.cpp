@@ -32,23 +32,48 @@ bool isGoalReached(map<char, WriggleWorm>* allWorms) {
 		return false;
 	}
 }
+struct puzzleGraphNode {
+	vector<vector<char>>* gameGrid;
+};
 void GreedyBestFirstGraphSearch(vector<vector<char>> *puzzleGrid, short numWriggle) {
 	clock_t startTime = clock();
 	vector<WormMove*> resultMoves;
+	vector<vector<vector<char>>*> allNodes;
+	vector<vector<char>>* currentNode;
 	map<char, WriggleWorm>* allWorms = NULL;
-	typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS> myGraph;
-	myGraph allPuzzlesGraph;
-    boost::add_vertex(0, allPuzzlesGraph);
+	boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, puzzleGraphNode ,boost::property<boost::edge_weight_t, int> > allPuzzlesGraph;
+
+	currentNode = puzzleGrid;
+	allNodes.push_back(currentNode);
+	int temp = boost::add_vertex(allPuzzlesGraph);
+	cout << temp << endl;
+	temp = boost::add_vertex(allPuzzlesGraph);
+	cout << temp << endl;
+	allPuzzlesGraph[temp].gameGrid = currentNode;
+
 	while (!isGoalReached(allWorms)) {
+		vector<WormMove*> allWormMoves;
 		allWorms = new map<char, WriggleWorm>();
 		char firstBuffer[2];
 		for (int i = 0; i < numWriggle; i++) {
 			_itoa_s(i, firstBuffer, 10);
 			//Inserting all wriggle worms in allworms
-			allWorms->insert(pair<char, WriggleWorm>(firstBuffer[0], WriggleWorm(*(currentNode->gameGrid), firstBuffer[0])));
+			allWorms->insert(pair<char, WriggleWorm>(firstBuffer[0], WriggleWorm(*currentNode, firstBuffer[0])));
 		}
-
-	
+		for (map<char, WriggleWorm>::iterator iter = allWorms->begin(); iter != allWorms->end(); ++iter) {
+			//Inserting all moves of each wriggle worm found into allWormMoves 
+			iter->second.allPossibleMoves(*currentNode, allWormMoves);
+		}
+		for (auto iter : allWormMoves) {
+			map<char, WriggleWorm>* newWormSet = new map<char, WriggleWorm>(*allWorms);
+			//Creating the new move 
+			vector<vector<char>>* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode, iter, allWorms->at(iter->wormIndex));
+			//Inserting new grid in graph
+			boost::add_vertex(allPuzzlesGraph);
+			allNodes.push_back(newGrid);
+			//Check heuristic
+			boost::add_edge(0, 0, 0, allPuzzlesGraph);
+		}
 	}
 	clock_t endTime = clock();
 
