@@ -1,15 +1,14 @@
 #include "WriggleWorm.h"
 
-
 boost::unordered_map<pair<char, char>, char> WriggleWorm::directionMap = WriggleWorm::populateMap();
 boost::unordered_map<pair<char, char>, char> WriggleWorm::headDirectionMap = WriggleWorm::populateHeadMap();
 
 //Creating wriggle worm to identify with as a wriggle worm within the puzzle.
-WriggleWorm::WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleIndex) {
+WriggleWorm::WriggleWorm(const vecChar &puzzleGrid, char wriggleIndex) {
 	wormIndex = wriggleIndex;
 	goalX = puzzleGrid[0].size() - 1;
 	goalY = puzzleGrid.size() - 1;
-	for (vector<vector<char>>::const_iterator i = puzzleGrid.begin(); i != puzzleGrid.end(); ++i) {
+	for (vecChar::const_iterator i = puzzleGrid.begin(); i != puzzleGrid.end(); ++i) {
 		for (vector<char>::const_iterator j = i->begin(); j != i->end(); ++j) {
 			if (wriggleIndex == *j) {
 				char currentBodyPiece = *j;
@@ -109,7 +108,7 @@ WriggleWorm::~WriggleWorm() {
 }
 
 //Finding all possible moves of tail and head of all of the wriggle worms within the puzzle
-void WriggleWorm::allPossibleMoves(const vector<vector<char>> &puzzleGrid, vector<WormMove*> &allWormMoves) {
+void WriggleWorm::allPossibleMoves(const vecChar &puzzleGrid, vector<WormMove*> &allWormMoves) {
 	for (int i = -1; i <= 1; i++) {
 		for (int j = -1; j <= 1; j++) {
 			if (!(i == j) && i == 0 || j == 0) {
@@ -127,8 +126,8 @@ void WriggleWorm::allPossibleMoves(const vector<vector<char>> &puzzleGrid, vecto
 }
 
 //Creating the move of a certain wriggle worm's head or tail
-vector<vector<char>>* WriggleWorm::newMovePuzzle(vector<vector<char>>* puzzleGrid, const WormMove *wormMove, const WriggleWorm oldWriggleWorm) {
-	vector<vector<char>>* newPuzzleGrid = new vector<vector<char>>(*puzzleGrid);
+vecChar* WriggleWorm::newMovePuzzle(vecChar* puzzleGrid, const WormMove *wormMove, const WriggleWorm oldWriggleWorm) {
+	vecChar* newPuzzleGrid = new vecChar(*puzzleGrid);
 	//If the head is moving
 	if (wormMove->isHead == 1) {
 		(*newPuzzleGrid)[wormMove->yCoord][wormMove->xCoord] = oldWriggleWorm.wormHead.direction;
@@ -299,8 +298,8 @@ bool WriggleWorm::isGoal() {
 }
 
 //To allow printing of the puzzle (or outputting to the file).
-ostream& operator<<(ostream& out, const vector<vector<char>> &puzzleGrid) {
-	for (vector<vector<char>>::const_iterator i = puzzleGrid.begin(); i != puzzleGrid.end(); ++i) {
+ostream& operator<<(ostream& out, const vecChar &puzzleGrid) {
+	for (vecChar::const_iterator i = puzzleGrid.begin(); i != puzzleGrid.end(); ++i) {
 		for (vector<char>::const_iterator j = i->begin(); j != i->end(); ++j) {
 			out << *j << ' ';
 		}

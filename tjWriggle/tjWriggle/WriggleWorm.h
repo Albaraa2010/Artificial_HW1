@@ -8,6 +8,7 @@
 #include <boost/functional/hash/hash.hpp>
 
 using namespace std;
+typedef vector<vector<char>> vecChar;
 
 struct WormPiece {
 	short xCoord;
@@ -48,18 +49,18 @@ class WriggleWorm {
 
 public:
 	WriggleWorm() {};
-	WriggleWorm(const vector<vector<char>> &puzzleGrid, char wriggleIndex);
+	WriggleWorm(const vecChar &puzzleGrid, char wriggleIndex);
 	WriggleWorm(const WriggleWorm & oldWorm);
 	~WriggleWorm();
 
 	//Returns all possible moves for all wriggles (tail and head) within the puzzle.
-	void allPossibleMoves(const vector<vector<char>> &puzzleGrid, vector<WormMove*> &allWormMoves);
+	void allPossibleMoves(const vecChar &puzzleGrid, vector<WormMove*> &allWormMoves);
 
 	//Does the move and fixes the directions of the worm.
-	vector<vector<char>>* newMovePuzzle(vector<vector<char>> *puzzleGrid, const WormMove *wormMove, const WriggleWorm newWriggleWorm);
+	vecChar* newMovePuzzle(vecChar *puzzleGrid, const WormMove *wormMove, const WriggleWorm newWriggleWorm);
 
 	//To output the puzzle to a file through the use of << operator
-	friend ostream& operator<<(ostream& out, const vector<vector<char>> &puzzleGrid);
+	friend ostream& operator<<(ostream& out, const vecChar &puzzleGrid);
 
 	//If goal is found.
 	bool isGoal();
@@ -79,6 +80,22 @@ public:
 		map.insert({ { 0, -1 }, 'D' });
 		map.insert({ { 0, 1 }, 'U' });
 		return map;
+	}
+
+	WormPiece getWormHead(){
+		return wormHead;
+	}
+	
+	WormPiece getWormTail() {
+		return wormTail;
+	}
+
+	short getGoalX() {
+		return goalX;
+	}
+
+	short getGoalY() {
+		return goalY;
 	}
 
 private:

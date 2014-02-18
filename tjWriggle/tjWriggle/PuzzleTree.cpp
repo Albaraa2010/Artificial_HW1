@@ -3,7 +3,7 @@
 PuzzleTree::PuzzleTree() {
 }
 
-PuzzleTree::PuzzleTree(vector<vector<char>>* gameGrid, map<char, WriggleWorm>* allWorms) {
+PuzzleTree::PuzzleTree(vecChar* gameGrid, map<char, WriggleWorm>* allWorms) {
 	this->root = PuzzleNode(gameGrid, NULL, NULL, allWorms); 
 }
 
@@ -15,7 +15,7 @@ PuzzleTree::~PuzzleTree() {
 }
 
 //Inserting a puzzle in the tree.
-PuzzleNode* PuzzleTree::insert(PuzzleNode* parent, WormMove* parentMove, vector<vector<char>>* gameGrid, map<char, WriggleWorm>* allWorms) {
+PuzzleNode* PuzzleTree::insert(PuzzleNode* parent, WormMove* parentMove, vecChar* gameGrid, map<char, WriggleWorm>* allWorms) {
 	PuzzleNode* resultPuzzle = new PuzzleNode(gameGrid, parent, parentMove, allWorms);
 	parent->children.push_back(resultPuzzle);
 

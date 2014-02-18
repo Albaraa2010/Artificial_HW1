@@ -10,11 +10,12 @@
 #include "WriggleWorm.h"
 
 using namespace std;
+typedef vector<vector<char>> vecChar;
 
 struct PuzzleNode {
 	//Move made from a parent on the tree to the child (stored with the child)
 	WormMove* parentMove;
-	vector<vector<char>>* gameGrid;
+	vecChar* gameGrid;
 	vector<PuzzleNode*> children;
 	map<char, WriggleWorm>* allWorms;
 	PuzzleNode* parent;
@@ -22,7 +23,7 @@ struct PuzzleNode {
 
 	PuzzleNode() {};
 
-	PuzzleNode(vector<vector<char>>*  gameGrid, PuzzleNode* parent, WormMove* parentMove, map<char, WriggleWorm>* allWorms) {
+	PuzzleNode(vecChar*  gameGrid, PuzzleNode* parent, WormMove* parentMove, map<char, WriggleWorm>* allWorms) {
 		this->gameGrid = gameGrid;
 		this->parent = parent;
 		this->parentMove = parentMove;
@@ -53,9 +54,9 @@ private:
 	PuzzleNode root;
 public:
 	PuzzleTree();
-	PuzzleTree(vector<vector<char>>* gameGrid, map<char, WriggleWorm>* allWorms);
+	PuzzleTree(vecChar* gameGrid, map<char, WriggleWorm>* allWorms);
 	PuzzleNode* getRoot();
-	PuzzleNode* insert(PuzzleNode* parent, WormMove* parentMove, vector<vector<char>>* gameGrid, map<char, WriggleWorm>* allWorms);
+	PuzzleNode* insert(PuzzleNode* parent, WormMove* parentMove, vecChar* gameGrid, map<char, WriggleWorm>* allWorms);
 	~PuzzleTree();
 };
 #endif

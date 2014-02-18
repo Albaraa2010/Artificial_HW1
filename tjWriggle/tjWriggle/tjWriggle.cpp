@@ -14,8 +14,23 @@
 #include "WriggleWorm.h"
 #include "PuzzleTree.h"
 
+#include <boost/unordered_map.hpp>
+#include <boost/functional/hash/hash.hpp>
+#include <boost/heap/priority_queue.hpp>
 
 using namespace std;
+
+//2 dimensional vector of characters.
+typedef vector<vector<char>> vecChar;
+
+struct puzzleGraphNode {
+	vecChar* gameGrid;
+	WormMove* parentMove;
+	int parent;
+};
+
+//Graph using adjacency list that is directed, stores grid and worm move, and uses an edgweight of int value between vertices.
+typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, puzzleGraphNode, boost::property<boost::edge_weight_t, int> > myGraph;
 
 //Print all of the possible moves stored within allWormMoves
 void printAllMoves(const vector<WormMove*> &allWormMoves) {
@@ -32,20 +47,51 @@ bool isGoalReached(map<char, WriggleWorm>* allWorms) {
 		return false;
 	}
 }
-struct puzzleGraphNode {
-	vector<vector<char>>* gameGrid;
+int heuristic(WormMove* currentMove, map<char, WriggleWorm>* & allWorms) {
+	int edgeWeight = 0;
+	int xDifference, yDifference;
+	if (currentMove->wormIndex == 0) {
+		//The closer that the worm index 0 is to the goal the bigger the edgeweight.
+		xDifference = allWorms->at(0).getGoalX() - currentMove->xCoord;
+		yDifference = allWorms->at(0).getGoalY() - currentMove->yCoord;
+		edgeWeight = edgeWeight + xDifference + yDifference;
+	} else {
+		//The farther that worms other than index 0 worm are from the goal the bigger the edgeweight.
+		xDifference = abs(0 - currentMove->xCoord);
+		yDifference = abs(0 - currentMove->yCoord);
+	}
+	return edgeWeight;
+}
+class compareEdgeWeights {
+public:
+	bool operator()(const pair<int, int> & p1, const pair<int, int> & p2) const {
+		return p1.second < p2.second;
+	}
 };
-void greedyBestFirstGraphSearch(vector<vector<char>> *puzzleGrid, short numWriggle) {
+string hashGrid(vecChar* node) {
+	char* hashValue = new char[65]();
+	for (vector<vector<char>>::iterator i = node->begin(); i != node->end(); ++i) {
+		for (vector<char>::iterator j = i->begin(); j != i->end(); ++j) {
+			int firstIndex = i - node->begin();
+			int secondIndex = j - i->begin();
+			hashValue[firstIndex * i->size() + secondIndex] = *j;
+		}
+	}
+	return string(hashValue);
+}
+void greedyBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
+	boost::unordered_map<string, vecChar*> alreadyExists;
+	boost::heap::priority_queue<pair<int, int>, boost::heap::compare<compareEdgeWeights>> queueBest;
 	clock_t startTime = clock();
 	vector<WormMove*> resultMoves;
-	vector<vector<char>>* currentNode;
-	vector<vector<char>>* currentParentNode;
+	vecChar* currentNode;
+	int currentParentIndex = 0;
 	map<char, WriggleWorm>* allWorms = NULL;
-	boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, puzzleGraphNode ,boost::property<boost::edge_weight_t, int> > allPuzzlesGraph;
-
+	myGraph allPuzzlesGraph;
 	currentNode = puzzleGrid;
 	int temp = boost::add_vertex(allPuzzlesGraph);
 	allPuzzlesGraph[temp].gameGrid = currentNode;
+	allPuzzlesGraph[temp].parent = -1;
 
 	while (!isGoalReached(allWorms)) {
 		vector<WormMove*> allWormMoves;
@@ -60,30 +106,63 @@ void greedyBestFirstGraphSearch(vector<vector<char>> *puzzleGrid, short numWrigg
 			//Inserting all moves of each wriggle worm found into allWormMoves 
 			iter->second.allPossibleMoves(*currentNode, allWormMoves);
 		}
+		if (isGoalReached(allWorms)) {
+			break;
+		}
 		for (auto iter : allWormMoves) {
 			int tempGraphIndex;
+			int currentEdgeWeight;
+			/*
+			int currentParentXVal, currentParentYVal;
+			if (iter->isHead) {
+				currentParentXVal = allWorms->at(iter->wormIndex).getWormHead().xCoord;
+				currentParentYVal = allWorms->at(iter->wormIndex).getWormHead().yCoord;
+			} else {
+				currentParentXVal = allWorms->at(iter->wormIndex).getWormTail().xCoord;
+				currentParentYVal = allWorms->at(iter->wormIndex).getWormTail().yCoord;
+			}*/
+			string gridHashVal;
 			map<char, WriggleWorm>* newWormSet = new map<char, WriggleWorm>(*allWorms);
 			//Creating the new move 
-			vector<vector<char>>* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode, iter, allWorms->at(iter->wormIndex));
+			vecChar* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode, iter, allWorms->at(iter->wormIndex));
 			//Inserting new grid in graph
-			tempGraphIndex = boost::add_vertex(allPuzzlesGraph);
-			allPuzzlesGraph[tempGraphIndex].gameGrid = newGrid;
-			cout << *allPuzzlesGraph[tempGraphIndex].gameGrid;
-			cout << endl;
+			gridHashVal = hashGrid(newGrid);
+			if (alreadyExists.find(gridHashVal) == alreadyExists.end()) {
+				currentEdgeWeight = heuristic(iter, allWorms);
+				alreadyExists.insert({ gridHashVal, newGrid });
+				tempGraphIndex = boost::add_vertex(allPuzzlesGraph);
+				allPuzzlesGraph[tempGraphIndex].gameGrid = newGrid;
+				allPuzzlesGraph[tempGraphIndex].parent = currentParentIndex;
+				allPuzzlesGraph[tempGraphIndex].parentMove = iter;
+				boost::add_edge(currentParentIndex, tempGraphIndex, currentEdgeWeight, allPuzzlesGraph);
+				queueBest.push({tempGraphIndex, currentEdgeWeight});
+			}
 		}
+		currentParentIndex = queueBest.top().first;
+		currentNode = allPuzzlesGraph[currentParentIndex].gameGrid;
+		queueBest.pop();
 	}
 	clock_t endTime = clock();
-
+	int moveCount = 1;
+	vector<WormMove> allMoves;
+	while (currentParentIndex != 0) {
+		allMoves.push_back(*allPuzzlesGraph[currentParentIndex].parentMove);
+		moveCount++;
+		currentParentIndex = allPuzzlesGraph[currentParentIndex].parent;
+	}
 	ofstream resultFile;
 
 	resultFile.open("resultFile.txt");
-
-
-	cout << (endTime - startTime) << endl;
-	cout << resultMoves.size();
+	for (int i = allMoves.size() - 1; i >= 0; i--) {
+		resultFile << allMoves[i];
+	}
+	vecChar* lastNode = currentNode;
+	resultFile << *currentNode;
+	resultFile << (endTime - startTime) << endl;
+	resultFile << moveCount;
 }
-
-void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> *puzzleGrid, short numWriggle) {
+/*
+void iterativelyDeepeningDepthFirstTreeSearch(vecChar *puzzleGrid, short numWriggle) {
 	clock_t startTime = clock();
 	vector<WormMove*> resultMoves;
 	PuzzleNode* currentNode;
@@ -129,7 +208,7 @@ void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> *puzzleGrid, 
 				for (auto iter: allWormMoves) {
 					map<char, WriggleWorm>* newWormSet = new map<char, WriggleWorm>(*allWorms);
 					//Creating the new move 
-					vector<vector<char>>* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode->gameGrid, iter, allWorms->at(iter->wormIndex));
+					vecChar* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode->gameGrid, iter, allWorms->at(iter->wormIndex));
 					//Inserting new grid in tree
 					PuzzleNode* temp = resultTree.insert(currentNode, iter, newGrid, newWormSet);
 					//char* hash = hashGrid(temp);
@@ -144,8 +223,6 @@ void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> *puzzleGrid, 
 		}
 		currentChildrenList = stack<PuzzleNode*>();
 		depthLimit++;
-		clock_t tempTime = clock();
-		cout << (tempTime - startTime) << ' ' << depthLimit << endl;
 	}
 
 	//Going back to get the path of the result
@@ -175,8 +252,9 @@ void iterativelyDeepeningDepthFirstTreeSearch(vector<vector<char>> *puzzleGrid, 
 	cout << (endTime - startTime) << endl;
 	cout << resultMoves.size();
 }
+*/
 /*
-void breadthFirstTreeSearch(vector<vector<char>> &puzzleGrid, short numWriggle) {
+void breadthFirstTreeSearch(vecChar &puzzleGrid, short numWriggle) {
 	clock_t startTime = clock();
 	PuzzleTree resultTree = PuzzleTree(puzzleGrid);
 	PuzzleNode* currentNode = resultTree.getRoot();
@@ -198,7 +276,7 @@ void breadthFirstTreeSearch(vector<vector<char>> &puzzleGrid, short numWriggle) 
 			break;
 		}
 		for (int i = 0; i < allWormMoves.size(); i++) {
-			vector<vector<char>> newGrid = allWorms[allWormMoves[i]->wormIndex].newMovePuzzle(currentNode->gameGrid, allWormMoves[i]);
+			vecChar newGrid = allWorms[allWormMoves[i]->wormIndex].newMovePuzzle(currentNode->gameGrid, allWormMoves[i]);
 			currentChildrenList.push(resultTree.insert(currentNode, allWormMoves[i], newGrid));
 		}
 		currentNode = currentChildrenList.front();
@@ -224,7 +302,7 @@ int main(int argc, char* argv[]) {
 	short lineCount = 0;
 	short charCount = 0;
 	short width, height, numWriggle;
-	vector<vector<char>>* puzzleGrid;
+	vecChar* puzzleGrid;
 
 	puzzleFile.open(puzzleName);
 
@@ -251,7 +329,7 @@ int main(int argc, char* argv[]) {
 
 					case 2:
 						numWriggle = static_cast<short>(character - '0');
-						puzzleGrid = new  vector<vector<char>>(height, vector<char>(width, ' '));
+						puzzleGrid = new  vecChar(height, vector<char>(width, ' '));
 						break;
 					}
 				} else {
