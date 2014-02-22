@@ -23,10 +23,12 @@ using namespace std;
 //2 dimensional vector of characters.
 typedef vector<vector<char>> vecChar;
 
+//Inserting values used within the graph.
 struct puzzleGraphNode {
 	vecChar* gameGrid;
 	WormMove* parentMove;
 	int parent;
+	int pathPlusHeuristicWeight;
 };
 
 //Graph using adjacency list that is directed, stores grid and worm move, and uses an edgweight of int value between vertices.
@@ -47,9 +49,11 @@ bool isGoalReached(map<char, WriggleWorm>* allWorms) {
 		return false;
 	}
 }
-int heuristic(WormMove* currentMove, map<char, WriggleWorm>* & allWorms) {
-	int edgeWeight = 0;
+//Returns the value that should be given as the path cost (edge weight) for later determining best possible move.
+int heuristicCalc(WormMove* currentMove, map<char, WriggleWorm>* & allWorms, int currentIndex) {
+	int edgeWeight = 1;
 	int xDifference, yDifference;
+
 	if (currentMove->wormIndex == 0) {
 		//The closer that the worm index 0 is to the goal the bigger the edgeweight.
 		xDifference = allWorms->at(0).getGoalX() - currentMove->xCoord;
@@ -60,14 +64,17 @@ int heuristic(WormMove* currentMove, map<char, WriggleWorm>* & allWorms) {
 		xDifference = abs(0 - currentMove->xCoord);
 		yDifference = abs(0 - currentMove->yCoord);
 	}
+
 	return edgeWeight;
 }
+//Used for the queueBest (priority_queue) to automatically select the move with the highest (best) edge weight.
 class compareEdgeWeights {
 public:
 	bool operator()(const pair<int, int> & p1, const pair<int, int> & p2) const {
-		return p1.second < p2.second;
+		return p1.second > p2.second;
 	}
 };
+//Used to hash puzzleGrids to be used as the key value for look up within the unordered_map.
 string hashGrid(vecChar* node) {
 	char* hashValue = new char[65]();
 	for (vector<vector<char>>::iterator i = node->begin(); i != node->end(); ++i) {
@@ -79,24 +86,37 @@ string hashGrid(vecChar* node) {
 	}
 	return string(hashValue);
 }
-void greedyBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
-	boost::unordered_map<string, vecChar*> alreadyExists;
-	boost::heap::priority_queue<pair<int, int>, boost::heap::compare<compareEdgeWeights>> queueBest;
+void aStarBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
+
 	clock_t startTime = clock();
-	vector<WormMove*> resultMoves;
+
+	//Initialization of an unordered map used to check if a newGrid instance has already been visited within the graph for the purpose of 
+	//not adding it again to the graph. 
+	boost::unordered_map<string, vecChar*> alreadyExists;
+
+	//Used to produce the next best move used by the greedy algorithm.
+	boost::heap::priority_queue<pair<int, int>, boost::heap::compare<compareEdgeWeights>> queueBest;
+
 	vecChar* currentNode;
 	int currentParentIndex = 0;
 	map<char, WriggleWorm>* allWorms = NULL;
 	myGraph allPuzzlesGraph;
 	currentNode = puzzleGrid;
 	int temp = boost::add_vertex(allPuzzlesGraph);
+
+	//Inserting root node into graph.
 	allPuzzlesGraph[temp].gameGrid = currentNode;
+
+	//Parent value of the root node within the graph as -1 to determine it is the root.
 	allPuzzlesGraph[temp].parent = -1;
+
+	allPuzzlesGraph[temp].pathPlusHeuristicWeight = 0;
 
 	while (!isGoalReached(allWorms)) {
 		vector<WormMove*> allWormMoves;
 		allWorms = new map<char, WriggleWorm>();
 		char firstBuffer[2];
+
 		for (int i = 0; i < numWriggle; i++) {
 			_itoa_s(i, firstBuffer, 10);
 			//Inserting all wriggle worms in allworms
@@ -112,21 +132,104 @@ void greedyBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
 		for (auto iter : allWormMoves) {
 			int tempGraphIndex;
 			int currentEdgeWeight;
-			/*
-			int currentParentXVal, currentParentYVal;
-			if (iter->isHead) {
-				currentParentXVal = allWorms->at(iter->wormIndex).getWormHead().xCoord;
-				currentParentYVal = allWorms->at(iter->wormIndex).getWormHead().yCoord;
-			} else {
-				currentParentXVal = allWorms->at(iter->wormIndex).getWormTail().xCoord;
-				currentParentYVal = allWorms->at(iter->wormIndex).getWormTail().yCoord;
-			}*/
 			string gridHashVal;
+
 			map<char, WriggleWorm>* newWormSet = new map<char, WriggleWorm>(*allWorms);
 			//Creating the new move 
 			vecChar* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode, iter, allWorms->at(iter->wormIndex));
-			//Inserting new grid in graph
+			//Getting hashed value used as key for unordered map which is used for checking duplicate instances
 			gridHashVal = hashGrid(newGrid);
+
+			//Inserting new grid in graph, hash map, and queueBest if the instance of the newGrid has not already been visited
+			if (alreadyExists.find(gridHashVal) == alreadyExists.end()) {
+				tempGraphIndex = boost::add_vertex(allPuzzlesGraph);
+				currentEdgeWeight = heuristicCalc(iter, allWorms, tempGraphIndex) + allPuzzlesGraph[currentParentIndex].pathPlusHeuristicWeight;
+				alreadyExists.insert({ gridHashVal, newGrid });
+				allPuzzlesGraph[tempGraphIndex].gameGrid = newGrid;
+				allPuzzlesGraph[tempGraphIndex].parent = currentParentIndex;
+				allPuzzlesGraph[tempGraphIndex].parentMove = iter;
+				allPuzzlesGraph[tempGraphIndex].pathPlusHeuristicWeight = currentEdgeWeight;
+				boost::add_edge(currentParentIndex, tempGraphIndex, currentEdgeWeight, allPuzzlesGraph);
+				queueBest.push({ tempGraphIndex, currentEdgeWeight });
+			}
+		}
+		currentParentIndex = queueBest.top().first;
+		currentNode = allPuzzlesGraph[currentParentIndex].gameGrid;
+		queueBest.pop();
+	}
+	clock_t endTime = clock();
+	int moveCount = 0;
+	vector<WormMove> allMoves;
+	while (currentParentIndex != 0) {
+		allMoves.push_back(*allPuzzlesGraph[currentParentIndex].parentMove);
+		moveCount++;
+		currentParentIndex = allPuzzlesGraph[currentParentIndex].parent;
+	}
+	ofstream resultFile;
+
+	resultFile.open("resultFile.txt");
+	for (int i = allMoves.size() - 1; i >= 0; i--) {
+		resultFile << allMoves[i];
+	}
+	vecChar* lastNode = currentNode;
+	resultFile << *currentNode;
+	resultFile << (endTime - startTime) << endl;
+	resultFile << moveCount;
+}
+/*
+void greedyBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
+	
+	clock_t startTime = clock();
+
+	//Initialization of an unordered map used to check if a newGrid instance has already been visited within the graph for the purpose of 
+	//not adding it again to the graph. 
+	boost::unordered_map<string, vecChar*> alreadyExists;
+
+	//Used to produce the next best move used by the greedy algorithm.
+	boost::heap::priority_queue<pair<int, int>, boost::heap::compare<compareEdgeWeights>> queueBest;
+
+	vecChar* currentNode;
+	int currentParentIndex = 0;
+	map<char, WriggleWorm>* allWorms = NULL;
+	myGraph allPuzzlesGraph;
+	currentNode = puzzleGrid;
+	int temp = boost::add_vertex(allPuzzlesGraph);
+
+	//Inserting root node into graph.
+	allPuzzlesGraph[temp].gameGrid = currentNode;
+
+	//Parent value of the root node within the graph as -1 to determine it is the root.
+	allPuzzlesGraph[temp].parent = -1;
+
+	while (!isGoalReached(allWorms)) {
+		vector<WormMove*> allWormMoves;
+		allWorms = new map<char, WriggleWorm>();
+		char firstBuffer[2];
+
+		for (int i = 0; i < numWriggle; i++) {
+			_itoa_s(i, firstBuffer, 10);
+			//Inserting all wriggle worms in allworms
+			allWorms->insert(pair<char, WriggleWorm>(firstBuffer[0], WriggleWorm(*currentNode, firstBuffer[0])));
+		}
+		for (map<char, WriggleWorm>::iterator iter = allWorms->begin(); iter != allWorms->end(); ++iter) {
+			//Inserting all moves of each wriggle worm found into allWormMoves 
+			iter->second.allPossibleMoves(*currentNode, allWormMoves);
+		}
+		if (isGoalReached(allWorms)) {
+			break;
+		}
+		for (auto iter : allWormMoves) {
+			int tempGraphIndex;
+			int currentEdgeWeight;
+			string gridHashVal;
+
+			map<char, WriggleWorm>* newWormSet = new map<char, WriggleWorm>(*allWorms);
+			//Creating the new move 
+			vecChar* newGrid = newWormSet->at(iter->wormIndex).newMovePuzzle(currentNode, iter, allWorms->at(iter->wormIndex));
+			//Getting hashed value used as key for unordered map which is used for checking duplicate instances
+			gridHashVal = hashGrid(newGrid);
+
+			//Inserting new grid in graph, hash map, and queueBest if the instance of the newGrid has not already been visited
 			if (alreadyExists.find(gridHashVal) == alreadyExists.end()) {
 				currentEdgeWeight = heuristic(iter, allWorms);
 				alreadyExists.insert({ gridHashVal, newGrid });
@@ -161,6 +264,7 @@ void greedyBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
 	resultFile << (endTime - startTime) << endl;
 	resultFile << moveCount;
 }
+*/
 /*
 void iterativelyDeepeningDepthFirstTreeSearch(vecChar *puzzleGrid, short numWriggle) {
 	clock_t startTime = clock();
@@ -342,7 +446,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		greedyBestFirstGraphSearch(puzzleGrid, numWriggle);
+		aStarBestFirstGraphSearch(puzzleGrid, numWriggle);
 	}
 
 	return 0;
