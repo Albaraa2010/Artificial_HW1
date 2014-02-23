@@ -49,23 +49,24 @@ bool isGoalReached(map<char, WriggleWorm>* allWorms) {
 		return false;
 	}
 }
-//Returns the value that should be given as the path cost (edge weight) for later determining best possible move.
+//Returns the heuristic value.
 int heuristicCalc(WormMove* currentMove, map<char, WriggleWorm>* & allWorms, int currentIndex) {
-	int edgeWeight = 1;
+	int moveCost = 1;
 	int xDifference, yDifference;
 
 	if (currentMove->wormIndex == 0) {
-		//The closer that the worm index 0 is to the goal the bigger the edgeweight.
+		//The closer that the worm index 0 is to the goal the less the heuristic value will be (the priority queue sorts to where the smallest value is the optimal path to choose).
 		xDifference = allWorms->at(0).getGoalX() - currentMove->xCoord;
 		yDifference = allWorms->at(0).getGoalY() - currentMove->yCoord;
-		edgeWeight = edgeWeight + xDifference + yDifference;
+		moveCost = moveCost + xDifference + yDifference + 10;
 	} else {
-		//The farther that worms other than index 0 worm are from the goal the bigger the edgeweight.
+		//The farther that worms other than index 0 worm are from the goal the less the heuristic value will be.
 		xDifference = abs(0 - currentMove->xCoord);
 		yDifference = abs(0 - currentMove->yCoord);
+		moveCost = moveCost + xDifference + yDifference;
 	}
 
-	return edgeWeight;
+	return moveCost;
 }
 //Used for the queueBest (priority_queue) to automatically select the move with the highest (best) edge weight.
 class compareEdgeWeights {
@@ -110,6 +111,7 @@ void aStarBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
 	//Parent value of the root node within the graph as -1 to determine it is the root.
 	allPuzzlesGraph[temp].parent = -1;
 
+	//Total path cost + heuristic value (first node in graph being 0).
 	allPuzzlesGraph[temp].pathPlusHeuristicWeight = 0;
 
 	while (!isGoalReached(allWorms)) {
@@ -131,7 +133,7 @@ void aStarBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
 		}
 		for (auto iter : allWormMoves) {
 			int tempGraphIndex;
-			int currentEdgeWeight;
+			int currentPathCost;
 			string gridHashVal;
 
 			map<char, WriggleWorm>* newWormSet = new map<char, WriggleWorm>(*allWorms);
@@ -143,14 +145,14 @@ void aStarBestFirstGraphSearch(vecChar *puzzleGrid, short numWriggle) {
 			//Inserting new grid in graph, hash map, and queueBest if the instance of the newGrid has not already been visited
 			if (alreadyExists.find(gridHashVal) == alreadyExists.end()) {
 				tempGraphIndex = boost::add_vertex(allPuzzlesGraph);
-				currentEdgeWeight = heuristicCalc(iter, allWorms, tempGraphIndex) + allPuzzlesGraph[currentParentIndex].pathPlusHeuristicWeight;
+				currentPathCost = heuristicCalc(iter, allWorms, tempGraphIndex) + allPuzzlesGraph[currentParentIndex].pathPlusHeuristicWeight;
 				alreadyExists.insert({ gridHashVal, newGrid });
 				allPuzzlesGraph[tempGraphIndex].gameGrid = newGrid;
 				allPuzzlesGraph[tempGraphIndex].parent = currentParentIndex;
 				allPuzzlesGraph[tempGraphIndex].parentMove = iter;
-				allPuzzlesGraph[tempGraphIndex].pathPlusHeuristicWeight = currentEdgeWeight;
-				boost::add_edge(currentParentIndex, tempGraphIndex, currentEdgeWeight, allPuzzlesGraph);
-				queueBest.push({ tempGraphIndex, currentEdgeWeight });
+				allPuzzlesGraph[tempGraphIndex].pathPlusHeuristicWeight = currentPathCost;
+				boost::add_edge(currentParentIndex, tempGraphIndex, currentPathCost, allPuzzlesGraph);
+				queueBest.push({ tempGraphIndex, currentPathCost });
 			}
 		}
 		currentParentIndex = queueBest.top().first;
